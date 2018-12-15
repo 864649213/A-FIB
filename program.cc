@@ -4,7 +4,6 @@
 #include <vector>
 #include <chrono>
 #include <iomanip>
-
 using namespace std;
 
 
@@ -21,31 +20,31 @@ vector<string> union_kshingle(const vector<set<string>>& k_shingles){
     return output;
 }
 
-vector<pair<int,int>> hash_funtion(const int& size){
-    vector<pair<int,int>> has_function (size);
-    srand (time(NULL));
-    for(int i = 0; i< size;++i){
-        
-        has_function[i]= make_pair (rand() %size,rand() % size);
+vector<pair<int,int>> hash_funtion(){
+    vector<pair<int,int>> hash_function (100);
+    for(int i = 0; i< 100;++i){
+        srand (i);
+        hash_function[i]= make_pair (rand() %100,rand() % 100);
+       // cout<< hash_function[i].first <<"  "<< hash_function[i].second<<endl;
     }
-    return has_function;
+    return hash_function;
 }
 
 vector<vector<int>> minhash(const vector<set<string>>& k_shingles, vector< pair<int,int> > t){
     vector<string> shingles= union_kshingle(k_shingles);
     int size_hashF = t.size();
-    int size_set = shingles.size();
-    int k_size= k_shingles.size();
-    vector<vector<int>> minhash (size_hashF,vector<int>(k_size));
+    int size_shingles = shingles.size();
+    int ndoc= k_shingles.size();
+    vector<vector<int>> minhash (ndoc,vector<int>(size_hashF));
     for(int h = 0; h<size_hashF; ++h){
-        vector<int> permu (size_set);
-        for(int i = 0; i < size_set;++i){
-            permu[((i*t[h].first)+t[h].second)% size_set] = i;
+        vector<int> permu (size_shingles);
+        for(int i = 0; i < size_shingles;++i){
+            permu[((i*t[h].first)+t[h].second)% size_shingles] = i;
         }
-        for(int i = 0; i<size_set;++i){
-            for(int j =0; j < size_set;++j){
-                set<string>::iterator elem= k_shingles[j].find(shingles[permu[i]]) ;
-                if(elem != k_shingles[j].end())  minhash[j][i] = permu[i];
+        for(int i = 0; i<ndoc;++i){
+            for(int j =0; j < size_shingles;++j){
+                set<string>::iterator elem= k_shingles[i].find(shingles[permu[j]]) ;
+                if(elem != k_shingles[i].end())  minhash[i][h] = permu[j];
             }
         }
         
@@ -59,28 +58,31 @@ double sim_2_docs(const vector<int>& doc1, const vector<int>& doc2){
     int result = 0;
     for(int i = 0; i< size; ++i){
         if(doc1[i] == doc2[i])  ++result;
+       //cout <<doc1[i]<<"    "<<doc2[i]<<endl;
     }
-    return (double)(result/size);
+    cout <<result<<"  " <<size<<endl;
+    double output = (double)result/(double)size;
+    
+    return output;
 }
 
 vector<vector<double>> sim_k_docs(const vector<set<string>>& k_shingles){
-    vector<pair<int,int>> t_functions = hash_funtion(k_shingles.size());
-    vector<vector<int>> mhash = minhash(k_shingles,t_functions);
-    int size_set = mhash.size();
+    vector<vector<int>> mhash = minhash(k_shingles, hash_funtion());
+    int ndocs = k_shingles.size();
     //---- init matrix
-    vector<vector<double>> result (size_set,vector<double> (size_set));
-    for(int i = 0; i<size_set;++i){
+    vector<vector<double>> result (ndocs,vector<double> (ndocs));
+    for(int i = 0; i<ndocs;++i){
             result[i][i]= 1.0;
     }
-    vector<double> sim;
     
-    for(int i = 0; i < size_set; ++i){
-        for(int j =0;j<size_set;++j){
+    for(int i = 0; i < ndocs; ++i){
+        for(int j =0;j<ndocs;++j){
             if(j != i){
                 result[i][j]= sim_2_docs(mhash[i],mhash[j]);
             }
         }
     }
+    
     return result;
 
     
@@ -120,16 +122,18 @@ void menu () {
 
 void write_jacard(vector<set<string> > &shingles) {
     for (int i = 0; i < nDocs; ++i) {
-        for (int j = 0; j < nDocs; ++j) {
-            if (i == j) cout << "same ";
-            else if (i > j) cout << "xxxx ";
-            else cout << setprecision(3) << jsim(shingles[i], shingles[j]) << " ";
-            cout << endl;
-        }
+        for (int j = 0; j < nDocs; ++j) cout <<fixed<< setprecision(4)<< jsim(shingles[i], shingles[j]) << " ";
+    cout << endl;
     }
     
 }
- 
+void write_approach(const vector<vector<double>>& sim ){
+    for (int i = 0; i < nDocs; ++i) {
+        for (int j = 0; j < nDocs; ++j) cout << fixed<< setprecision(4)<< sim[i][j] << " ";
+    cout << endl;
+    }
+    
+}
 
 int main () {
     
@@ -166,6 +170,10 @@ int main () {
         cout << "The Jaccard similarity calculation process took: " << chrono::duration_cast<chrono::microseconds>(time).count() << " us" << endl;
     }else{
         cout<< "This is the approach of Jaccard similarity table" <<endl;
+        write_approach(sim_k_docs(shingles));
+        cout<<endl<<endl;;
+        write_jacard(shingles);
+
     }
     
     

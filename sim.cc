@@ -30,18 +30,18 @@ vector<pair<int,int>> hash_funtion(const int& size){
 vector<vector<int>> minhash(const vector<set<string>>& k_shingles, vector< pair<int,int> > t){
     vector<string> shingles= union_kshingle(k_shingles);
     int size_hashF = t.size();
-    int size_set = shingles.size();
-    int k_size= k_shingles.size();
-    vector<vector<int>> minhash (size_hashF,vector<int>(k_size));
+    int size_shingles = shingles.size();
+    int ndoc= k_shingles.size();
+    vector<vector<int>> minhash (ndoc,vector<int>(size_hashF));
     for(int h = 0; h<size_hashF; ++h){
-        vector<int> permu (size_set);
-        for(int i = 0; i < size_set;++i){
-            permu[((i*t[h].first)+t[h].second)% size_set] = i;
+        vector<int> permu (size_shingles);
+        for(int i = 0; i < size_shingles;++i){
+            permu[((i*t[h].first)+t[h].second)% size_shingles] = i;
         }
-        for(int i = 0; i<size_set;++i){
-            for(int j =0; j < size_set;++j){
-                set<string>::iterator elem= k_shingles[j].find(shingles[permu[i]]) ;
-                if(elem != k_shingles[j].end())  minhash[j][i] = permu[i];
+        for(int i = 0; i<ndoc;++i){
+            for(int j =0; j < size_shingles;++j){
+                set<string>::iterator elem= k_shingles[i].find(shingles[permu[j]]) ;
+                if(elem != k_shingles[i].end())  minhash[i][h] = permu[j];
             }
         }
         
@@ -60,19 +60,16 @@ double sim_2_docs(const vector<int>& doc1, const vector<int>& doc2){
 }
 
 vector<vector<double>> sim_k_docs(const vector<set<string>>& k_shingles){
-    vector<pair<int,int>> t_functions = hash_funtion(k_shingles.size());
-    vector<vector<int>> mhash = minhash(k_shingles,t_functions);
-    int size_hashF = mhash[0].size();
-    int size_set = mhash.size();
+    vector<vector<int>> mhash = minhash(k_shingles, hash_funtion(k_shingles.size()));
+    int ndocs = k_shingles.size();
     //---- init matrix
-    vector<vector<double>> result (size_set,vector<double> (size_set));
-    for(int i = 0; i<size_set;++i){
+    vector<vector<double>> result (ndocs,vector<double> (ndocs));
+    for(int i = 0; i<ndocs;++i){
             result[i][i]= 1.0;
     }
-    vector<double> sim;
     
-    for(int i = 0; i < size_set; ++i){
-        for(int j =0;j<size_set;++j){
+    for(int i = 0; i < ndocs; ++i){
+        for(int j =0;j<ndocs;++j){
             if(j != i){
                 result[i][j]= sim_2_docs(mhash[i],mhash[j]);
             }
