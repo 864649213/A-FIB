@@ -21,34 +21,40 @@ vector<string> union_kshingle(const vector<set<string>>& k_shingles){
 }
 
 vector<pair<int,int>> hash_funtion(){
-    vector<pair<int,int>> hash_function (100);
-    for(int i = 0; i< 100;++i){
+    vector<pair<int,int>> hash_function (10);
+    for(int i = 0; i< 10;++i){
         srand (i);
-        hash_function[i]= make_pair (rand() %100,rand() % 100);
+        hash_function[i]= make_pair (rand() %10,rand() % 10);
        // cout<< hash_function[i].first <<"  "<< hash_function[i].second<<endl;
     }
     return hash_function;
 }
 
 vector<vector<int>> minhash(const vector<set<string>>& k_shingles, vector< pair<int,int> > t){
-    vector<string> shingles= union_kshingle(k_shingles);
+    vector<string> shingles= union_kshingle(k_shingles);     
     int size_hashF = t.size();
     int size_shingles = shingles.size();
     int ndoc= k_shingles.size();
-    vector<vector<int>> minhash (ndoc,vector<int>(size_hashF));
+    vector<vector<int>> minhash (ndoc,vector<int>(size_hashF,-1));
     for(int h = 0; h<size_hashF; ++h){
         vector<int> permu (size_shingles);
         for(int i = 0; i < size_shingles;++i){
-            permu[((i*t[h].first)+t[h].second)% size_shingles] = i;
+            permu[i] = (i*t[h].first+ t[h].second) % size_shingles;
+
         }
-        for(int i = 0; i<ndoc;++i){
-            for(int j =0; j < size_shingles;++j){
-                set<string>::iterator elem= k_shingles[i].find(shingles[permu[j]]) ;
-                if(elem != k_shingles[i].end())  minhash[i][h] = permu[j];
+        for(int i = 0; i<size_shingles;++i){
+            for(int j =0; j < ndoc;++j){
+                set<string>::iterator elem= k_shingles[j].find(shingles[i]) ;
+                if(elem != k_shingles[j].end()){
+                    if(minhash[j][h] == -1)   minhash[j][h] = permu[i]; 
+                    else if(permu[i] < minhash[j][h]) minhash[j][h] = permu[i]; 
+                }
             }
+            
         }
-        
+         
     }
+
     return minhash;
 }
 
@@ -60,7 +66,7 @@ double sim_2_docs(const vector<int>& doc1, const vector<int>& doc2){
         if(doc1[i] == doc2[i])  ++result;
        //cout <<doc1[i]<<"    "<<doc2[i]<<endl;
     }
-    cout <<result<<"  " <<size<<endl;
+    //cout <<result<<"  " <<size<<endl;
     double output = (double)result/(double)size;
     
     return output;
