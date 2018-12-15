@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <iomanip>
 
 using namespace std;
 
@@ -65,7 +66,6 @@ double sim_2_docs(const vector<int>& doc1, const vector<int>& doc2){
 vector<vector<double>> sim_k_docs(const vector<set<string>>& k_shingles){
     vector<pair<int,int>> t_functions = hash_funtion(k_shingles.size());
     vector<vector<int>> mhash = minhash(k_shingles,t_functions);
-    int size_hashF = mhash[0].size();
     int size_set = mhash.size();
     //---- init matrix
     vector<vector<double>> result (size_set,vector<double> (size_set));
@@ -120,8 +120,12 @@ void menu () {
 
 void write_jacard(vector<set<string> > &shingles) {
     for (int i = 0; i < nDocs; ++i) {
-        for (int j = 0; j < nDocs; ++j) cout << jsim(shingles[i], shingles[j]) << " ";
-    cout << endl;
+        for (int j = 0; j < nDocs; ++j) {
+            if (i == j) cout << "same ";
+            else if (i > j) cout << "xxxx ";
+            else cout << setprecision(3) << jsim(shingles[i], shingles[j]) << " ";
+            cout << endl;
+        }
     }
     
 }
